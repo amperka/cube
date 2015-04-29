@@ -3,6 +3,9 @@
 import threading
 import wx
 
+from wx.lib.newevent import NewEvent
+
+
 from device import CubeDevice
 
 
@@ -43,6 +46,15 @@ class ManualControlPanel(wx.Panel):
         self.device.go_green()
 
 
+#==============================================================================
+EVT_DISCOVERED = wx.NewId()
+
+class DiscoveryCompletedEvent(wx.PyEvent):
+    def __init__(self, ports):
+        super(DiscoveryCompletedEvent, self).__init__()
+        self.SetEventType(EVT_DISCOVERED)
+        self.ports = ports
+
 class DiscoveryPanel(wx.Panel):
     def __init__(self, parent):
         super(DiscoveryPanel, self).__init__(parent)
@@ -54,15 +66,37 @@ class DiscoveryPanel(wx.Panel):
         box.Add(label, 1, wx.EXPAND | wx.ALL, 10)
         self.SetSizer(box)
 
-EVT_DISCOVERED = wx.NewId()
+#==============================================================================
+PortSelectedEvent, EVT_PORT_SELECTED = NewEvent()
 
-class DiscoveryCompletedEvent(wx.PyEvent):
-    def __init__(self, ports):
-        super(DiscoveryCompletedEvent, self).__init__()
-        self.SetEventType(EVT_DISCOVERED)
-        self.ports = ports
+class PortSelectionPanel(wx.Panel):
+    def __init__(self, parent, device):
+        super(PortSelectionPanel, self).__init__(parent)
+        self.device = device
+        self.InitUI()
+
+    def InitUI(self):
+        box = wx.BoxSizer(wx.VERTICAL)
+        self.listbox = wx.ListBox(self)
+        ok_button = wx.Button(self, label=u'OK')
+        ok_button.Bind(wx.EVT_BUTTON, self.OnOK)
+
+        box.Add(wx.StaticText(self, label=u'К какому порту подключен куб?'), 1, wx.EXPAND | wx.ALL, 10)
+        box.Add(self.listbox, 1, wx.EXPAND | wx.ALL, 10)
+        box.Add(ok_button, 1, wx.EXPAND | wx.ALL, 10)
+
+        self.SetSizer(box)
+
+    def SetPorts(self, ports):
+        self.listbox.InsertItems(ports, 0)
+
+    def OnOK(self, event):
+        # TODO: what if nothing selected?
+        port = self.listbox.GetString(self.listbox.GetSelection())
+        wx.PostEvent(self, PortSelectedEvent(port=port))
 
 
+#==============================================================================
 class MainFrame(wx.Frame):
     def __init__(self, parent, device):
         super(MainFrame, self).__init__(
@@ -81,6 +115,7 @@ class MainFrame(wx.Frame):
         self.sizer = wx.BoxSizer(wx.VERTICAL)
 
         self.AddPanel('discovery', DiscoveryPanel(self))
+        self.AddPanel('port_selection', PortSelectionPanel(self, self.device))
         self.AddPanel('manual_control', ManualControlPanel(self, self.device))
         self.ShowPanel('discovery')
 
@@ -108,6 +143,21 @@ class MainFrame(wx.Frame):
 
     def OnDiscovered(self, event):
         ports = event.ports
+        if len(ports) > 1:
+            self.panels['port_selection'].SetPorts(ports)
+            self.panels['port_selection'].Bind(EVT_PORT_SELECTED, self.OnPortSelected)
+            self.ShowPanel('port_selection')
+        elif len(ports) == 1:
+            self.Connect(ports[0])
+            self.ShowPanel('manual_control')
+        else:
+            raise NotImlementedError
+
+    def OnPortSelected(self, event):
+        self.Connect(event.port)
+
+    def Connect(self, port):
+        self.device.connect(port)
         self.ShowPanel('manual_control')
 
 
