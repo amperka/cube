@@ -2,10 +2,9 @@
 
 import threading
 import wx
+import modes
 
 from wx.lib.newevent import NewEvent
-
-
 from device import CubeDevice
 
 
@@ -34,10 +33,18 @@ class ActionPanel(wx.Panel):
 
         self.sizer = wx.BoxSizer(wx.VERTICAL)
         self.sizer.Add(self.mode_combobox, 0, wx.EXPAND | wx.ALL, 10)
+
         self.AddMode(u'Вручную', ManualControlPanel(self, self.device))
-        self.AddMode(u'GMail', ImapPanel(self, self.device, False))
-        self.AddMode(u'Mail.ru', ImapPanel(self, self.device, False))
-        self.AddMode(u'Произвольный IMAP', ImapPanel(self, self.device, True))
+
+        gmail_mode = modes.ImapMode(self.device)
+        self.AddMode(u'GMail', MailPanel(self, gmail_mode, False))
+
+        mailru_mode = modes.ImapMode(self.device)
+        self.AddMode(u'Mail.ru', MailPanel(self, mailru_mode, False))
+
+        generic_imap_mode = modes.ImapMode(self.device)
+        self.AddMode(u'Произвольный IMAP', MailPanel(self, generic_imap_mode, True))
+
         self.ShowPanel(u'Вручную')
         self.SetSizer(self.sizer)
 
@@ -49,9 +56,11 @@ class ActionPanel(wx.Panel):
 
     def ShowPanel(self, name):
         if self.active_panel:
+            self.active_panel.DeactivateMode()
             self.active_panel.Hide()
         self.panels[name].Show()
         self.active_panel = self.panels[name]
+        self.active_panel.ActivateMode()
         self.mode_combobox.SetSelection(self.mode_combobox.FindString(name))
         self.Layout()
 
@@ -60,21 +69,31 @@ class ActionPanel(wx.Panel):
 
 
 #==============================================================================
-class ImapPanel(wx.Panel):
-    def __init__(self, parent, device, show_imap_host_port):
-        super(ImapPanel, self).__init__(parent)
-        self.device = device
+class MailPanel(wx.Panel):
+    def __init__(self, parent, mode, show_imap_host_port):
+        super(MailPanel, self).__init__(parent)
+        self.mode = mode
         self.show_imap_host_port = show_imap_host_port
+
         self.InitUI()
 
     def InitUI(self):
         sizer = wx.BoxSizer(wx.VERTICAL)
 
         credentials_panel = self.CreateCredentialsUI()
-        run_button = wx.Button(self, label=u'Поехали!')
+        self.run_button = wx.Button(self, label=u'Поехали!')
+        self.cancel_button = wx.Button(self, label=u'Остановить')
+        self.status_label = wx.StaticText(self)
+
+        self.run_button.Bind(wx.EVT_BUTTON, self.OnRunButton)
+        self.cancel_button.Bind(wx.EVT_BUTTON, self.OnCancelButton)
 
         sizer.Add(credentials_panel, 1, wx.EXPAND)
-        sizer.Add(run_button, 0, wx.EXPAND | wx.ALL, 10)
+        sizer.Add(self.status_label, 0, wx.EXPAND | wx.ALL, 10)
+        sizer.Add(self.run_button, 0, wx.EXPAND | wx.ALL, 10)
+        sizer.Add(self.cancel_button, 0, wx.EXPAND | wx.ALL, 10)
+        self.cancel_button.Hide()
+
         self.SetSizer(sizer)
 
     def CreateCredentialsUI(self):
@@ -108,7 +127,49 @@ class ImapPanel(wx.Panel):
 
         return cp
 
+    def ActivateMode(self):
+        if self.show_imap_host_port:
+            self.host_input.Enable()
+            self.port_input.Enable()
 
+        self.login_input.Enable()
+        self.password_input.Enable()
+        self.run_button.Show()
+        self.cancel_button.Hide()
+        self.status_label.SetLabel(u'')
+
+    def DeactivateMode(self):
+        self.mode.stop()
+
+    def OnRunButton(self, event):
+        if self.show_imap_host_port:
+            self.mode.set_host_port(self.host_input.GetValue(),
+                                    self.port_input.GetValue())
+
+        self.mode.set_credentials(self.login_input.GetValue(),
+                                  self.password_input.GetValue())
+
+        if self.show_imap_host_port:
+            self.host_input.Disable()
+            self.port_input.Disable()
+
+        self.login_input.Disable()
+        self.password_input.Disable()
+        self.run_button.Hide()
+        self.cancel_button.Show()
+        self.Layout()
+
+        self.mode.bind(modes.EVT_STATUS_CHANGED, self.OnStatusChanged)
+        threading.Thread(target=self.mode.loop).start()
+
+    def OnCancelButton(self, event):
+        self.DeactivateMode()
+        self.ActivateMode()
+        self.mode.unbind(modes.EVT_STATUS_CHANGED, self.OnStatusChanged)
+        self.Layout()
+
+    def OnStatusChanged(self, event):
+        self.status_label.SetLabel(event.status)
 
 
 #==============================================================================
@@ -135,6 +196,12 @@ class ManualControlPanel(wx.Panel):
 
     def OnGreenButton(self, event):
         self.device.go_green()
+
+    def ActivateMode(self):
+        pass
+
+    def DeactivateMode(self):
+        pass
 
 
 #==============================================================================

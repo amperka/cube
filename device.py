@@ -15,5 +15,8 @@ class CubeDevice(object):
     def go_green(self):
         pass
 
+    def blink(self):
+        pass
+
     def connect(self, port):
         pass
