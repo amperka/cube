@@ -16,6 +16,8 @@ class CubeApp(wx.App):
     def Run(self):
         frame = MainFrame(None, self.device)
         frame.Show()
+        self.SetTopWindow(frame)
+        self.SetExitOnFrameDelete(True)
         self.MainLoop()
 
 #==============================================================================
@@ -76,6 +78,7 @@ class MailPanel(wx.Panel):
         self.show_imap_host_port = show_imap_host_port
 
         self.InitUI()
+        self.Bind(wx.EVT_WINDOW_DESTROY, lambda e: self.mode.stop())
 
     def InitUI(self):
         sizer = wx.BoxSizer(wx.VERTICAL)

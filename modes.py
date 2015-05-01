@@ -10,7 +10,7 @@ StatusChangedEvent, EVT_STATUS_CHANGED = NewEvent()
 
 class Mode(object):
     def __init__(self):
-        self._evt_transport = wx.Frame(None)
+        self._evt_transport = wx.Frame(wx.GetApp().GetTopWindow())
 
     def bind(self, evt, handler):
         self._evt_transport.Bind(evt, handler)
@@ -19,7 +19,8 @@ class Mode(object):
         self._evt_transport.Unbind(evt, handler=handler)
 
     def _post_event(self, event):
-        wx.PostEvent(self._evt_transport, event)
+        if isinstance(self._evt_transport, wx.EvtHandler):
+            wx.PostEvent(self._evt_transport, event)
 
 
 class ImapMode(Mode):
@@ -68,7 +69,6 @@ class ImapMode(Mode):
         self._stopped = True
 
     def set_status(self, status):
-        print status
         self.status = status
         self._post_event(StatusChangedEvent(status=status))
 
