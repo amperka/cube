@@ -117,7 +117,7 @@ class MailPanel(wx.Panel):
             ])
 
         self.login_input = wx.TextCtrl(cp)
-        self.password_input = wx.TextCtrl(cp)
+        self.password_input = wx.TextCtrl(cp, style=wx.TE_PASSWORD)
         sizer.AddMany([
             wx.StaticText(cp, label=u"Логин"),
             (self.login_input, 1, wx.EXPAND),
