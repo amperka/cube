@@ -5,9 +5,11 @@ import wx
 import modes
 
 from wx.lib.newevent import NewEvent
+from wx.lib.embeddedimage import PyEmbeddedImage
 from device import CubeDevice
 
 
+#==============================================================================
 class CubeApp(wx.App):
     def __init__(self):
         super(CubeApp, self).__init__()
@@ -18,7 +20,44 @@ class CubeApp(wx.App):
         frame.Show()
         self.SetTopWindow(frame)
         self.SetExitOnFrameDelete(True)
+        TaskBarIcon()
         self.MainLoop()
+
+#==============================================================================
+
+class TaskBarIcon(wx.TaskBarIcon):
+    def __init__(self):
+        super(TaskBarIcon, self).__init__()
+        self.SetupIcon()
+        self.Bind(wx.EVT_TASKBAR_LEFT_DOWN, self.OnLeftClick)
+
+    def CreatePopupMenu(self):
+        menu = wx.Menu()
+        exit = wx.MenuItem(menu, -1, u'Закрыть')
+        menu.Bind(wx.EVT_MENU, self.OnExit, id=item.GetId())
+        menu.AppendItem(exit)
+        return menu
+
+    def SetupIcon(self):
+        img = PyEmbeddedImage(
+            "iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAGXRFWHRTb2Z0d2FyZQBBZG9i"
+            "ZSBJbWFnZVJlYWR5ccllPAAAAbtJREFUeNqkk79Kw1AUxr9e88fEBCIYsI6dnaWDm119Bh0L"
+            "rkJdSgvtJkEHB6E+hR0FH8BH0E2xxaEg0g7JTVLvOUlvW7diCr38cs/58n0nN5Vut3sKoIrN"
+            "r3Gn0xkaaZoe9Hq9+0272+12k1YjyzLM53O8Pp7Bd03e3D8Z4O38HL5Z8oB4qNhlrj40QH0s"
+            "IKWs5HkOxxIIA5tvMgvF9ipbigPN1McCKgILpFJCJpILtpQ6s/zLCbNJ9apv4YAV9xsDnY/s"
+            "ke11bmguHRQRkiRhB08fTbh+kbnu32I0GsH3fWZany9GcM2Cj+92QX16BvQEyxEIwiJzNsvg"
+            "OA7CMGSezWawhIPADktH8XIGCwcylUhKWySoMmqbxFKmep/qtYM4jlmg7t0A0zKz+nmeh+l0"
+            "qnPXbzwsCvLcAvWtObh8v4S5U8ygH/TRevmB6RaZ+4cVtFqKyxlcXxvrDsii2Baw98oZxIot"
+            "B3awyPwFoWZg6xl8Lx2oAVXoJMqV9168plSfC83lPtVTHwuMx2NDqFMXVaPlQbeA6Ej94Uff"
+            "iKIlC2GA+lhgMpl81mq1q00/JvXQT1rZ/n+uXwEGAOa/G6mCJlcxAAAAAElFTkSuQmCC")
+
+        self.SetIcon(img.GetIcon(), u"Куб")
+
+    def OnLeftClick(self, event):
+        wx.GetApp().GetTopWindow().Show()
+
+    def OnExit(self, event):
+        wx.GetApp().GetTopWindow().Close()
 
 #==============================================================================
 class ActionPanel(wx.Panel):
