@@ -5,8 +5,6 @@ class CubeDevice(object):
         import time
         time.sleep(2)
         return [
-            '/dev/ttyACM0',
-            '/dev/ttyACM1',
         ]
 
     def go_red(self):

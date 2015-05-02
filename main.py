@@ -258,13 +258,33 @@ class PortSelectionPanel(wx.Panel):
 
 
 #==============================================================================
+SearchAgainEvent, EVT_SEARCH_AGAIN = NewEvent()
+
+class PortNotFoundPanel(wx.Panel):
+    def __init__(self, parent):
+        super(PortNotFoundPanel, self).__init__(parent)
+        self.InitUI()
+
+    def InitUI(self):
+        box = wx.BoxSizer(wx.VERTICAL)
+
+        search_again_button = wx.Button(self, label=u'Искать снова')
+        search_again_button.Bind(wx.EVT_BUTTON, lambda e: wx.PostEvent(self, SearchAgainEvent()))
+
+        label = u'Куб не найден.\nУбедитесь, что он подключён к компьютеру.'
+        box.Add(wx.StaticText(self, label=label), 1, wx.EXPAND | wx.ALL, 10)
+        box.Add(search_again_button, 0, wx.EXPAND | wx.ALL, 10)
+
+        self.SetSizer(box)
+
+
+#==============================================================================
 class MainFrame(wx.Frame):
     def __init__(self, parent, device):
         super(MainFrame, self).__init__(
             parent, title=u'Технокуб', size=(320, 360))
             
         self.device = device
-        self.panels = {}
         self.active_panel = None
 
         self.InitUI()
@@ -275,27 +295,31 @@ class MainFrame(wx.Frame):
     def InitUI(self):
         self.sizer = wx.BoxSizer(wx.VERTICAL)
 
-        self.AddPanel('discovery', DiscoveryPanel(self))
-        self.AddPanel('port_selection', PortSelectionPanel(self, self.device))
-        self.AddPanel('action', ActionPanel(self, self.device))
-        self.ShowPanel('discovery')
+        self.discovery_panel = self.AddPanel(DiscoveryPanel(self))
+        self.port_selection_panel = self.AddPanel(PortSelectionPanel(self, self.device))
+        self.port_not_found_panel = self.AddPanel(PortNotFoundPanel(self))
+        self.action_panel = self.AddPanel(ActionPanel(self, self.device))
+        self.ShowPanel(self.discovery_panel)
+
+        self.port_selection_panel.Bind(EVT_PORT_SELECTED, self.OnPortSelected)
+        self.port_not_found_panel.Bind(EVT_SEARCH_AGAIN, self.OnSearchAgain)
+        self.Connect(-1, -1, EVT_DISCOVERED, self.OnDiscovered)
 
         self.SetSizer(self.sizer)
 
-    def AddPanel(self, name, panel):
-        self.panels[name] = panel
+    def AddPanel(self, panel):
         panel.Hide()
         self.sizer.Add(panel, 1, wx.EXPAND)
+        return panel
 
-    def ShowPanel(self, name):
+    def ShowPanel(self, panel):
         if self.active_panel:
             self.active_panel.Hide()
-        self.panels[name].Show()
-        self.active_panel = self.panels[name]
+        panel.Show()
+        self.active_panel = panel
         self.Layout()
 
     def Discover(self):
-        self.Connect(-1, -1, EVT_DISCOVERED, self.OnDiscovered)
         threading.Thread(target=self._DoDiscover).start()
 
     def _DoDiscover(self):
@@ -305,16 +329,19 @@ class MainFrame(wx.Frame):
     def OnDiscovered(self, event):
         ports = event.ports
         if len(ports) > 1:
-            self.panels['port_selection'].SetPorts(ports)
-            self.panels['port_selection'].Bind(EVT_PORT_SELECTED, self.OnPortSelected)
-            self.ShowPanel('port_selection')
+            self.port_selection_panel.SetPorts(ports)
+            self.ShowPanel(self.port_selection_panel)
         elif len(ports) == 1:
             self.ConnectDevice(ports[0])
         else:
-            raise NotImlementedError
+            self.ShowPanel(self.port_not_found_panel)
 
     def OnPortSelected(self, event):
         self.ConnectDevice(event.port)
+
+    def OnSearchAgain(self, event):
+        self.ShowPanel(self.discovery_panel)
+        self.Discover()
 
     def ConnectDevice(self, port):
         self.device.connect(port)
