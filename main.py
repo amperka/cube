@@ -36,18 +36,18 @@ class ActionPanel(wx.Panel):
         self.sizer = wx.BoxSizer(wx.VERTICAL)
         self.sizer.Add(self.mode_combobox, 0, wx.EXPAND | wx.ALL, 10)
 
-        self.AddMode(u'Вручную', ManualControlPanel(self, self.device))
+        self.AddMode(u'Управлять вручную', ManualControlPanel(self, self.device))
 
-        gmail_mode = modes.ImapMode(self.device)
-        self.AddMode(u'GMail', MailPanel(self, gmail_mode, False))
+        gmail_mode = modes.GMailMode(self.device)
+        self.AddMode(u'Проверять GMail', MailPanel(self, gmail_mode, False))
 
-        mailru_mode = modes.ImapMode(self.device)
-        self.AddMode(u'Mail.ru', MailPanel(self, mailru_mode, False))
+        mailru_mode = modes.MailruMode(self.device)
+        self.AddMode(u'Проверять Mail.ru', MailPanel(self, mailru_mode, False))
 
         generic_imap_mode = modes.ImapMode(self.device)
-        self.AddMode(u'Произвольный IMAP', MailPanel(self, generic_imap_mode, True))
+        self.AddMode(u'Проверять почту через IMAP', MailPanel(self, generic_imap_mode, True))
 
-        self.ShowPanel(u'Вручную')
+        self.ShowPanel(u'Управлять вручную')
         self.SetSizer(self.sizer)
 
     def AddMode(self, name, panel):

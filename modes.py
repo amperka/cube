@@ -1,10 +1,10 @@
 # -*- coding: utf-8; -*-
 
 import wx
+import imaplib
 
 from time import sleep
 from wx.lib.newevent import NewEvent
-
 
 StatusChangedEvent, EVT_STATUS_CHANGED = NewEvent()
 
@@ -73,5 +73,20 @@ class ImapMode(Mode):
         self._post_event(StatusChangedEvent(status=status))
 
     def _fetch_unread_count(self):
-        sleep(2)
-        return 42
+        connection = imaplib.IMAP4_SSL(self._host, self._port)
+        connection.login(self._login, self._password)
+        connection.select()
+        resp = connection.search(None, 'UnSeen')
+        return len(resp[1][0].split())
+
+
+class GMailMode(ImapMode):
+    def __init__(self, device, interval=20):
+        super(GMailMode, self).__init__(device, interval)
+        self.set_host_port('imap.gmail.com', '993')
+
+
+class MailruMode(ImapMode):
+    def __init__(self, device, interval=20):
+        super(MailruMode, self).__init__(device, interval)
+        self.set_host_port('imap.mail.ru', '993')
