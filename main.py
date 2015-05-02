@@ -222,10 +222,19 @@ class DiscoveryPanel(wx.Panel):
         self.InitUI()
 
     def InitUI(self):
-        label = wx.StaticText(self, label=u'Поиск куба…')
-        box = wx.BoxSizer(wx.HORIZONTAL)
-        box.Add(label, 1, wx.EXPAND | wx.ALL, 10)
-        self.SetSizer(box)
+        panel = wx.Panel(self)
+        label = wx.StaticText(
+            panel, label=u'Поиск куба…',
+            style=wx.ALIGN_CENTRE_HORIZONTAL)
+
+        vbox = wx.BoxSizer(wx.VERTICAL)
+        hbox = wx.BoxSizer(wx.HORIZONTAL)
+
+        hbox.Add(label, 1, wx.ALIGN_CENTRE_VERTICAL, 10)
+        vbox.Add(panel, 1, wx.ALIGN_CENTRE_HORIZONTAL, 10)
+
+        panel.SetSizer(hbox)
+        self.SetSizer(vbox)
 
 #==============================================================================
 PortSelectedEvent, EVT_PORT_SELECTED = NewEvent()
@@ -266,16 +275,23 @@ class PortNotFoundPanel(wx.Panel):
         self.InitUI()
 
     def InitUI(self):
-        box = wx.BoxSizer(wx.VERTICAL)
+        vbox = wx.BoxSizer(wx.VERTICAL)
 
         search_again_button = wx.Button(self, label=u'Искать снова')
         search_again_button.Bind(wx.EVT_BUTTON, lambda e: wx.PostEvent(self, SearchAgainEvent()))
 
-        label = u'Куб не найден.\nУбедитесь, что он подключён к компьютеру.'
-        box.Add(wx.StaticText(self, label=label), 1, wx.EXPAND | wx.ALL, 10)
-        box.Add(search_again_button, 0, wx.EXPAND | wx.ALL, 10)
+        txt_box = wx.BoxSizer(wx.HORIZONTAL)
+        txt_panel = wx.Panel(self)
+        txt = wx.StaticText(
+            txt_panel, label=u'Куб не найден.\nУбедитесь, что он подключён к компьютеру.',
+            style=wx.ALIGN_CENTRE_HORIZONTAL | wx.TE_MULTILINE)
+        txt_box.Add(txt, 1, wx.ALIGN_CENTRE_VERTICAL, 10)
+        txt_panel.SetSizer(txt_box)
 
-        self.SetSizer(box)
+        vbox.Add(txt_panel, 1, wx.ALIGN_CENTRE_HORIZONTAL, 10)
+        vbox.Add(search_again_button, 0, wx.EXPAND | wx.ALL, 10)
+
+        self.SetSizer(vbox)
 
 
 #==============================================================================
