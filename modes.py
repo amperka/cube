@@ -2,6 +2,7 @@
 
 import wx
 import imaplib
+import socket
 
 from time import sleep
 from wx.lib.newevent import NewEvent
@@ -46,8 +47,17 @@ class ImapMode(Mode):
         self._stopped = False
         while not self._stopped:
             self.set_status(u"Проверка почты…")
-            count = self._fetch_unread_count()
-            self.set_status(u"Писем: {}".format(count))
+            count = 0
+
+            try:
+                count = self._fetch_unread_count()
+                mesage = u"Писем: {}".format(count)
+            except imaplib.IMAP4.error as e:
+                message = u"Неверные логин/пароль"
+            except socket.error:
+                message = u"Нет соединения с сервером"
+
+            self.set_status(message)
 
             if self._stopped:
                 break
@@ -62,8 +72,7 @@ class ImapMode(Mode):
             while countdown > 0 and not self._stopped:
                 sleep(0.1)
                 countdown -= 0.1
-                self.set_status(
-                    u"Писем: {}. До проверки: {:.0f}".format(count, countdown))
+                self.set_status(u"{} ~ {:.0f}".format(message, countdown))
 
     def stop(self):
         self._stopped = True
