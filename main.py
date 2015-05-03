@@ -36,7 +36,7 @@ class TaskBarIcon(wx.TaskBarIcon):
     def CreatePopupMenu(self):
         menu = wx.Menu()
         exit = wx.MenuItem(menu, -1, u'Закрыть')
-        menu.Bind(wx.EVT_MENU, self.OnExit, id=item.GetId())
+        menu.Bind(wx.EVT_MENU, self.OnExit, id=exit.GetId())
         menu.AppendItem(exit)
         return menu
 
@@ -45,7 +45,10 @@ class TaskBarIcon(wx.TaskBarIcon):
         self.SetIcon(icons.icon_16.GetIcon(), u"Куб")
 
     def OnLeftClick(self, event):
-        wx.GetApp().GetTopWindow().Show()
+        frame = wx.GetApp().GetTopWindow()
+        frame.Show()
+        frame.Restore()
+        frame.Raise()
 
     def OnExit(self, event):
         wx.GetApp().GetTopWindow().Close()
@@ -323,7 +326,8 @@ ConnectedEvent, EVT_CONNECTED = NewEvent()
 class MainFrame(wx.Frame):
     def __init__(self, parent, device):
         super(MainFrame, self).__init__(
-            parent, title=u'Технокуб', size=(320, 360))
+            parent, title=u'Технокуб', size=(320, 360),
+            style=(wx.RESIZE_BORDER | wx.CAPTION | wx.CLOSE_BOX | wx.FRAME_NO_TASKBAR))
             
         self.device = device
         self.active_panel = None
@@ -402,7 +406,7 @@ class MainFrame(wx.Frame):
 
     def OnClose(self, event):
         if platform.system() == 'Windows':
-            self.Iconize()
+            self.Hide()
         else:
             self.Destroy()
 
