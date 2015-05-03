@@ -1,5 +1,6 @@
 # -*- coding: utf-8; -*-
 
+import platform
 import threading
 import wx
 import modes
@@ -22,6 +23,7 @@ class CubeApp(wx.App):
         self.SetExitOnFrameDelete(True)
         TaskBarIcon()
         self.MainLoop()
+        self.device.disconnect()
 
 #==============================================================================
 
@@ -355,6 +357,7 @@ class MainFrame(wx.Frame):
         self.port_not_found_panel.Bind(EVT_SEARCH_AGAIN, self.OnSearchAgain)
         self.Bind(EVT_DISCOVERED, self.OnDiscovered)
         self.Bind(EVT_CONNECTED, self.OnConnected)
+        self.Bind(wx.EVT_CLOSE, self.OnClose)
 
         self.SetSizer(self.sizer)
 
@@ -405,6 +408,12 @@ class MainFrame(wx.Frame):
 
     def OnConnected(self, event):
         self.ShowPanel(self.action_panel)
+
+    def OnClose(self, event):
+        if platform.system() == 'Windows':
+            self.Iconize()
+        else:
+            self.Destroy()
 
 
 
