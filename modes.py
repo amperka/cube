@@ -30,6 +30,7 @@ class ImapMode(Mode):
         self.device = device
         self.interval = interval
         self.status = u''
+        self._prev_count = 0
         self._host = None
         self._port = None
         self._login = None
@@ -51,7 +52,7 @@ class ImapMode(Mode):
 
             try:
                 count = self._fetch_unread_count()
-                mesage = u"Писем: {}".format(count)
+                message = u"Писем: {}".format(count)
             except imaplib.IMAP4.error as e:
                 message = u"Неверные логин/пароль"
             except socket.error:
@@ -62,11 +63,15 @@ class ImapMode(Mode):
             if self._stopped:
                 break
 
-            if count:
+            if count > self._prev_count:
                 self.device.blink()
+
+            if count:
                 self.device.go_green()
             else:
                 self.device.go_red()
+
+            self._prev_count = count
 
             countdown = self.interval
             while countdown > 0 and not self._stopped:

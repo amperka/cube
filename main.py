@@ -400,7 +400,7 @@ class MainFrame(wx.Frame):
 
     def ConnectDevice(self, port):
         self.device.connect(port)
-        self.ShowPanel('action')
+        self.ShowPanel(self.action_panel)
 
 
 
