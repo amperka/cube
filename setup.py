@@ -26,5 +26,9 @@ setup(
                           "custom_boot_script": '',
                          }
               },
-    windows=['main.py']
+    windows=[{
+        'script': 'main.py',
+        'icon_resources': [(0, "icons/icon.ico")],
+        'dest_base': 'cube',
+    }]
 )
