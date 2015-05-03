@@ -1,7 +1,12 @@
 # -*- coding: utf-8; -*-
 
+import itertools
+import platform
+
 from time import sleep
+from glob import glob
 from pyfirmata import Arduino, OUTPUT
+
 
 class CubeDevice(object):
     green_pins = [5, 9]
@@ -11,10 +16,32 @@ class CubeDevice(object):
         self.board = None
 
     def discover(self):
-        return [
-            '/dev/ttyACM0',
-            '/dev/ttyACM1',
-        ]
+        if platform.system() == 'Windows':
+            return list(self._discover_windows())
+        elif platform.system() == 'Darwin':
+            return list(self._discover_posix(['/dev/tty.usbmodem*', '/dev/tty.usbserial*']))
+        else:
+            return list(self._discover_posix(['/dev/ttyACM*', '/dev/ttyUSB*']))
+
+    def _discover_windows(self):
+        import _winreg as winreg
+        path = r'HARDWARE\DEVICEMAP\SERIALCOMM'
+        try:
+            key = winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE, path)
+        except WindowsError:
+            return
+
+        for i in itertools.count():
+            try:
+                val = winreg.EnumValue(key, i)
+                yield (str(val[1]), str(val[0]))
+            except EnvironmentError:
+                break
+
+    def _discover_posix(self, patterns):
+        for p in patterns:
+            for match in glob(p):
+                yield match
 
     def _write_pins(self, pins, value):
         for p in pins:
