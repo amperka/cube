@@ -256,17 +256,26 @@ class LongTaskPanel(wx.Panel):
         super(LongTaskPanel, self).__init__(parent)
         self.InitUI(text)
 
+        self.timer = wx.Timer(self)
+        self.timer.Start(50)
+        self.Bind(wx.EVT_TIMER, lambda e: self.bar.Pulse())
+
     def InitUI(self, text):
         panel = wx.Panel(self)
         label = wx.StaticText(
             panel, label=text,
             style=wx.ALIGN_CENTRE_HORIZONTAL)
+        self.bar = wx.Gauge(self)
+        self.bar.Pulse()
 
         vbox = wx.BoxSizer(wx.VERTICAL)
         hbox = wx.BoxSizer(wx.HORIZONTAL)
 
-        hbox.Add(label, 1, wx.ALIGN_CENTRE_VERTICAL, 10)
-        vbox.Add(panel, 1, wx.ALIGN_CENTRE_HORIZONTAL, 10)
+        hbox.Add(label, 1, wx.ALIGN_BOTTOM, 10)
+
+        vbox.Add(panel, 1, wx.ALIGN_CENTRE_HORIZONTAL | wx.LEFT | wx.RIGHT, 10)
+        vbox.Add(self.bar, 0, wx.EXPAND | wx.ALIGN_TOP | wx.ALL, 10)
+        vbox.Add(wx.Panel(self), 1, wx.EXPAND, 10)
 
         panel.SetSizer(hbox)
         self.SetSizer(vbox)
