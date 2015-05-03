@@ -282,13 +282,18 @@ class PortSelectionPanel(wx.Panel):
 
     def InitUI(self):
         box = wx.BoxSizer(wx.VERTICAL)
+
         self.listbox = wx.ListBox(self)
-        ok_button = wx.Button(self, label=u'OK')
-        ok_button.Bind(wx.EVT_BUTTON, self.OnOK)
+        self.listbox.Bind(wx.EVT_LISTBOX_DCLICK, self.OnOK)
+        self.listbox.Bind(wx.EVT_LISTBOX, self.OnSelectionChange)
+
+        self.ok_button = wx.Button(self, label=u'OK')
+        self.ok_button.Bind(wx.EVT_BUTTON, self.OnOK)
+        self.ok_button.Disable()
 
         box.Add(wx.StaticText(self, label=u'К какому порту подключен куб?'), 0, wx.EXPAND | wx.ALL, 10)
         box.Add(self.listbox, 1, wx.EXPAND | wx.LEFT | wx.RIGHT, 10)
-        box.Add(ok_button, 0, wx.EXPAND | wx.ALL, 10)
+        box.Add(self.ok_button, 0, wx.EXPAND | wx.ALL, 10)
 
         self.SetSizer(box)
 
@@ -296,9 +301,11 @@ class PortSelectionPanel(wx.Panel):
         self.listbox.InsertItems(ports, 0)
 
     def OnOK(self, event):
-        # TODO: what if nothing selected?
         port = self.listbox.GetString(self.listbox.GetSelection())
         wx.PostEvent(self, PortSelectedEvent(port=port))
+
+    def OnSelectionChange(self, event):
+        self.ok_button.Enable(self.listbox.GetSelection() != wx.NOT_FOUND)
 
 
 #==============================================================================
