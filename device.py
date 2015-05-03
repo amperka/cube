@@ -34,7 +34,7 @@ class CubeDevice(object):
         for i in itertools.count():
             try:
                 val = winreg.EnumValue(key, i)
-                yield (str(val[1]), str(val[0]))
+                yield str(val[1])
             except EnvironmentError:
                 break
 
