@@ -139,23 +139,33 @@ class MailPanel(wx.Panel):
         sizer.AddGrowableCol(1, 1)
 
         if self.show_imap_host_port:
-            self.host_input = wx.TextCtrl(cp)
-            self.port_input = wx.TextCtrl(cp)
-            sizer.AddMany([
-                wx.StaticText(cp, label=u"Хост"),
-                (self.host_input, 1, wx.EXPAND),
+            hbox = wx.BoxSizer(wx.HORIZONTAL)
+            hp_panel = wx.Panel(cp)
 
-                wx.StaticText(cp, label=u"Порт"),
+            self.host_input = wx.TextCtrl(hp_panel)
+            self.port_input = wx.TextCtrl(hp_panel)
+            hbox.AddMany([
+                (self.host_input, 3, wx.EXPAND),
+
+                (wx.StaticText(hp_panel, label=u" Порт"), 0, wx.ALIGN_CENTRE_VERTICAL),
                 (self.port_input, 1, wx.EXPAND),
             ])
+
+            hp_panel.SetSizer(hbox)
+
+            sizer.AddMany([
+                (wx.StaticText(cp, label=u"Хост"), 0, wx.ALIGN_CENTRE_VERTICAL),
+                (hp_panel, 1, wx.EXPAND),
+            ])
+
 
         self.login_input = wx.TextCtrl(cp)
         self.password_input = wx.TextCtrl(cp, style=wx.TE_PASSWORD)
         sizer.AddMany([
-            wx.StaticText(cp, label=u"Логин"),
+            (wx.StaticText(cp, label=u"Логин"), 0, wx.ALIGN_CENTRE_VERTICAL),
             (self.login_input, 1, wx.EXPAND),
 
-            wx.StaticText(cp, label=u"Пароль"),
+            (wx.StaticText(cp, label=u"Пароль"), 0, wx.ALIGN_CENTRE_VERTICAL),
             (self.password_input, 1, wx.EXPAND),
         ])
 
@@ -223,8 +233,8 @@ class ManualControlPanel(wx.Panel):
         self.green_button.Bind(wx.EVT_BUTTON, self.OnGreenButton)
 
         box = wx.BoxSizer(wx.HORIZONTAL)
-        box.Add(self.red_button, 1, wx.EXPAND | wx.ALL, 10)
-        box.Add(self.green_button, 1, wx.EXPAND | wx.ALL, 10)
+        box.Add(self.red_button, 1, wx.EXPAND | wx.BOTTOM, 10)
+        box.Add(self.green_button, 1, wx.EXPAND | wx.BOTTOM, 10)
         self.SetSizer(box)
 
     def OnRedButton(self, event):
@@ -277,7 +287,7 @@ class PortSelectionPanel(wx.Panel):
         ok_button.Bind(wx.EVT_BUTTON, self.OnOK)
 
         box.Add(wx.StaticText(self, label=u'К какому порту подключен куб?'), 0, wx.EXPAND | wx.ALL, 10)
-        box.Add(self.listbox, 1, wx.EXPAND | wx.ALL, 10)
+        box.Add(self.listbox, 1, wx.EXPAND | wx.LEFT | wx.RIGHT, 10)
         box.Add(ok_button, 0, wx.EXPAND | wx.ALL, 10)
 
         self.SetSizer(box)
