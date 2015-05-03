@@ -51,7 +51,7 @@ class TaskBarIcon(wx.TaskBarIcon):
         frame.Raise()
 
     def OnExit(self, event):
-        wx.GetApp().GetTopWindow().Close()
+        wx.GetApp().GetTopWindow().Destroy()
 
 #==============================================================================
 class ActionPanel(wx.Panel):
