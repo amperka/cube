@@ -10,7 +10,7 @@ from pyfirmata import Arduino, OUTPUT
 
 class CubeDevice(object):
     green_pins = [5, 9]
-    red_pins = [6, 8]
+    red_pins = [6, 10]
 
     def __init__(self):
         self.board = None
