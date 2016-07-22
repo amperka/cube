@@ -66,7 +66,7 @@ class CubeDevice(object):
         self.board = Arduino(port)
         for p in self.green_pins + self.red_pins:
             self.board.digital[p].mode = OUTPUT
-    
+
     def disconnect(self):
         if not self.board:
             return
