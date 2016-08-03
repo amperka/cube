@@ -185,7 +185,7 @@ class SlackMode(ImapMode):
         self._fetch_threads()
         res = sum(self.UNREADS)
         if res:
-            self._logger.error('Нових писем: %s', res)
+            self._logger.info('Нових писем: %s', res)
         return res
 
 
