@@ -71,6 +71,9 @@ class ActionPanel(wx.Panel):
 
         self.AddMode(u'Управлять вручную', ManualControlPanel(self, self.device))
 
+        slack_mode = modes.SlackMode(self.device)
+        self.AddMode(u'Проверять Slack', SlackPanel(self, slack_mode, False))
+
         gmail_mode = modes.GMailMode(self.device)
         self.AddMode(u'Проверять GMail', MailPanel(self, gmail_mode, False))
 
@@ -160,12 +163,14 @@ class MailPanel(wx.Panel):
 
 
         self.login_input = wx.TextCtrl(cp)
+        self.login_label = wx.StaticText(cp, label=u"Логин")
         self.password_input = wx.TextCtrl(cp, style=wx.TE_PASSWORD)
+        self.password_label = wx.StaticText(cp, label=u"Пароль")
         sizer.AddMany([
-            (wx.StaticText(cp, label=u"Логин"), 0, wx.ALIGN_CENTRE_VERTICAL),
+            (self.login_label, 0, wx.ALIGN_CENTRE_VERTICAL),
             (self.login_input, 1, wx.EXPAND),
 
-            (wx.StaticText(cp, label=u"Пароль"), 0, wx.ALIGN_CENTRE_VERTICAL),
+            (self.password_label, 0, wx.ALIGN_CENTRE_VERTICAL),
             (self.password_input, 1, wx.EXPAND),
         ])
 
@@ -216,6 +221,17 @@ class MailPanel(wx.Panel):
 
     def OnStatusChanged(self, event):
         self.status_label.SetLabel(event.status)
+
+
+#==============================================================================
+class SlackPanel(MailPanel):
+
+    def CreateCredentialsUI(self):
+        res = super(SlackPanel, self).CreateCredentialsUI()
+        self.password_label.Hide()
+        self.password_input.Hide()
+        self.login_label.LabelText = u'Slack токен'
+        return res
 
 
 #==============================================================================
@@ -354,15 +370,15 @@ class MainFrame(wx.Frame):
         super(MainFrame, self).__init__(
             parent, title=u'Технокуб', size=(320, 360),
             style=(wx.RESIZE_BORDER | wx.CAPTION | wx.CLOSE_BOX | wx.FRAME_NO_TASKBAR))
-            
+
         self.device = device
         self.active_panel = None
 
         self.InitUI()
         self.Centre()
-        self.Show()     
+        self.Show()
         self.Discover()
-        
+
     def InitUI(self):
         self.sizer = wx.BoxSizer(wx.VERTICAL)
 
@@ -422,7 +438,7 @@ class MainFrame(wx.Frame):
     def ConnectDevice(self, port):
         self.ShowPanel(self.connection_panel)
         threading.Thread(target=self._DoConnectDevice, args=(port, )).start()
-    
+
     def _DoConnectDevice(self, port):
         self.device.connect(port)
         wx.PostEvent(self, ConnectedEvent())
